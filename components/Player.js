@@ -33,12 +33,13 @@ function Player() {
   const fetchCurrentSongInfo = () => {
     if(!songInfo) {
       spotifyApi.getMyCurrentPlayingTrack().then(data => {
-        console.log('Now playing: ', data.body?.item?.id);
         setCurrentTrackId(data.body?.item?.id);
+        
+        spotifyApi.getMyCurrentPlaybackState().then(data => {
+          setIsPlaying(data.body?.is_playing);
+        })
       })
-      spotifyApi.getMyCurrentPlayingTrack().then(data => {
-        setIsPlaying(data.body?.is_playing);
-      })
+      
     }
   }
 
@@ -61,7 +62,7 @@ function Player() {
       fetchCurrentSongInfo();
       setVolume(50);
     }
-  }, [])
+  }, [currentTrackId, spotifyApi, session])
 
   useEffect(() => {
     if (volume > 0 && volume <= 100) {
@@ -81,7 +82,7 @@ function Player() {
         <img className="hidden md:inline h-10 w-10" src={songInfo?.album.images?.[0]?.url} alt="" />
         <div>
           <h1>{songInfo?.name}</h1>
-          <p>{songInfo?.artist?.[0]?.name}</p>
+          <p>{songInfo?.artists?.[0]?.name}</p>
         </div>
       </div>
 
