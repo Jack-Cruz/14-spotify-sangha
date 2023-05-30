@@ -56,7 +56,7 @@ function Sidebar() {
                 audioFeatures.body.tempo, 
                 audioFeatures.body.valence).then(() => {
                     cnt += 1;
-                    if(cnt == 5){
+                    if(cnt == 10){
                         getRecomendation(playlistid).then((data) => {
                             console.log(data)
                             spotifyApi.createPlaylist(playlistid, 
