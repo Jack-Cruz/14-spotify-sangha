@@ -11,15 +11,15 @@ import {
 import { signOut, useSession } from 'next-auth/react'
 import useSpotify from '@/hooks/useSpotify';
 import { useRecoilState } from 'recoil';
-import { playlistIdState } from '@/atoms/playlistAtom';
-import { getRecomendation } from '@/lib/apiBackend';
+import { playlistIdState, toptrackState } from '@/atoms/playlistAtom';
+import { getRecomendation, postUserTracks } from '@/lib/apiBackend';
 
 function Sidebar() {
   const spotifyApi = useSpotify();
   const { data: session, status } = useSession();
   const [ playlists, setPlaylists ] = useState([]);
   const [ playlistId, setPlaylistId] = useRecoilState(playlistIdState);
-
+  const [topTracks, setTopTracks] = useRecoilState(toptrackState);
 
   useEffect(() => {
     if(spotifyApi.getAccessToken()) {
@@ -34,25 +34,61 @@ function Sidebar() {
   const predict = () => {
     console.log("***********************")
     console.log("predict")
-    getRecomendation(session.user.name).then((data) => {
-        spotifyApi.createPlaylist('DJ Spotify' + Date.now(), 
-        { 'description': 'My description', 
-            'public': false })
-        .then(function(playlist) {
-            console.log('playlist:', playlist.body.id)
-            data = data.map((item) => "spotify:track:" + item)
-            console.log('items:', data)
 
-            spotifyApi.addTracksToPlaylist(playlist.body.id, data)
-        }).catch((err) => {
-            console.log('error:', err);
-        }).catch((err) => {
-            console.log('error:', err);
-        });
-        console.log('data:', data)
-    }).catch((err) => {
-        console.log('error:', err);
-    });
+    const playlistid = 'DJ Spotify'+session.user.name+Date.now();
+    let cnt = 0;
+    console.log('topTracks:', topTracks)
+    topTracks.map((track) => 
+        spotifyApi.getAudioFeaturesForTrack(track.track.id)
+        .then((audioFeatures) => {
+            postUserTracks(playlistid,
+                audioFeatures.body.acousticness, 
+                audioFeatures.body.danceability, 
+                audioFeatures.body.duration_ms, 
+                audioFeatures.body.energy, 
+                audioFeatures.body.id, 
+                audioFeatures.body.instrumentalness, 
+                audioFeatures.body.key, 
+                audioFeatures.body.liveness, 
+                audioFeatures.body.loudness, 
+                audioFeatures.body.mode, 
+                audioFeatures.body.speechiness, 
+                audioFeatures.body.tempo, 
+                audioFeatures.body.valence).then(() => {
+                    cnt += 1;
+                    if(cnt == 5){
+                        getRecomendation(playlistid).then((data) => {
+                            console.log(data)
+                            spotifyApi.createPlaylist(playlistid, 
+                            { 'description': 'My description', 
+                                'public': false })
+                            .then(function(playlist) {
+                                console.log('playlist:', playlist.body.id)
+                                data = data.map((item) => "spotify:track:" + item)
+                                console.log('items:', data)
+                    
+                                spotifyApi.addTracksToPlaylist(playlist.body.id, data).then(() =>
+                                    {
+                                        session.user.name=session.user.name;
+                                    }
+                                )
+                            }).catch((err) => {
+                                console.log('error:', err);
+                            }).catch((err) => {
+                                console.log('error:', err);
+                            });
+                            console.log('data:', data)
+                        }).catch((err) => {
+                            console.log('error:', err);
+                        });
+                    }
+                }).catch((err) => {})
+
+    }))
+    
+
+    
+    
   }
 
   return (

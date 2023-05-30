@@ -39,67 +39,9 @@ export default function Center() {
         })
     }
     else {
-        // Preguntar al backend si tiene top tracks
-        console.log('user name:', session.user.name)
-
-        const data = getUserTracks(session.user.name).then((data) => {
-            console.log('data:', data)
-            if(data.length == 0){
-                console.log("preguntar a spotify")
-                // si no tiene preguntar a spotify y completar la lista
-                spotifyApi.getMyRecentlyPlayedTracks().then((toptracks) => {
-                    console.log(toptracks.body.items)
-                    setTracks(toptracks.body.items)
-                    setTopTracks(toptracks.body.items)
-                    // auxpostUserTracks({
-                    //     "acousticness": 1.0,
-                    //     "danceability": 1.0,
-                    //     "duration_ms": 30,
-                    //     "energy": 1.0,
-                    //     "id": "1000",
-                    //     "instrumentalness": 5.0,
-                    //     "key": 15,
-                    //     "liveness": 10.0,
-                    //     "loudness": 1.0,
-                    //     "mode": 1,
-                    //     "speechiness": 1.0,
-                    //     "tempo": 1.0,
-                    //     "user": "dante",
-                    //     "valence": 1.0
-                    // })
-                    toptracks.body.items.map((track) => 
-                        spotifyApi.getAudioFeaturesForTrack(track.track.id)
-                        .then((audioFeatures) => {
-                            postUserTracks(session.user.name, 
-                                audioFeatures.body.acousticness, 
-                                audioFeatures.body.danceability, 
-                                audioFeatures.body.duration_ms, 
-                                audioFeatures.body.energy, 
-                                audioFeatures.body.id, 
-                                audioFeatures.body.instrumentalness, 
-                                audioFeatures.body.key, 
-                                audioFeatures.body.liveness, 
-                                audioFeatures.body.loudness, 
-                                audioFeatures.body.mode, 
-                                audioFeatures.body.speechiness, 
-                                audioFeatures.body.tempo, 
-                                audioFeatures.body.valence)
-
-                        })
-                    )
-                })
-            } else {
-                console.log("existe data en el usuario", data)
-                setTracks([])
-                data.map((track) =>{
-                    spotifyApi.getTrack(track.id).then((track) => {
-                       console.log('track body:', track.body) 
-                       setTracks((oldTracks) => [...oldTracks, {"track": track.body}])                       
-                    })
-                })
-                // setTracks(data)
-                setTopTracks(data)
-            }
+        spotifyApi.getMyRecentlyPlayedTracks({'limit': 5}).then((recetlyplayed) => {
+            setTracks(recetlyplayed.body.items)
+            setTopTracks(recetlyplayed.body.items)
         });
     }
     
