@@ -39,7 +39,7 @@ export default function Center() {
         })
     }
     else {
-        spotifyApi.getMyRecentlyPlayedTracks({'limit': 5}).then((recetlyplayed) => {
+        spotifyApi.getMyRecentlyPlayedTracks({'limit': 10}).then((recetlyplayed) => {
             setTracks(recetlyplayed.body.items)
             setTopTracks(recetlyplayed.body.items)
         });
